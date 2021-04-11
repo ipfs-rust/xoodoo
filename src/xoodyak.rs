@@ -73,7 +73,7 @@ impl Xoodyak {
         );
         self.phase = Phase::Up;
         if self.mode != Mode::Hash {
-            self.state.add_byte(cu, 47);
+            self.state.add_bytes(&[cu], 47);
         }
         self.state.permute(XOODOO_ROUNDS);
         if let Some(mut out) = out {
@@ -85,15 +85,15 @@ impl Xoodyak {
         debug_assert!(bin.unwrap_or_default().len() <= self.mode.absorb_rate());
         self.phase = Phase::Down;
         if let Some(bin) = bin {
-            self.state.add_bytes(&bin);
-            self.state.add_byte(0x01, bin.len());
+            self.state.add_bytes(&bin, 0);
+            self.state.add_bytes(&[0x01], bin.len());
         } else {
-            self.state.add_byte(0x01, 0);
+            self.state.add_bytes(&[0x01], 0);
         }
         if self.mode == Mode::Hash {
-            self.state.add_byte(cd & 0x01, 47);
+            self.state.add_bytes(&[cd & 0x01], 47);
         } else {
-            self.state.add_byte(cd, 47);
+            self.state.add_bytes(&[cd], 47);
         }
     }
 

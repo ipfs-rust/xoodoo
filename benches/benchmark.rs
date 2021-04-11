@@ -7,7 +7,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut st = Xoodoo::default();
         b.iter(|| {
             st.permute(12);
-            st.bytes(&mut out);
+            st.extract_bytes(&mut out);
             out
         })
     });
