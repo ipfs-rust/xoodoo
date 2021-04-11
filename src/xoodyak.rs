@@ -1,5 +1,6 @@
 use crate::xoodoo::Xoodoo;
 
+const XOODOO_ROUNDS: usize = 12;
 const HASH_RATE: usize = 16;
 const KEYED_ABSORB_RATE: usize = 44;
 const KEYED_SQUEEZE_RATE: usize = 24;
@@ -74,7 +75,7 @@ impl Xoodyak {
         if self.mode != Mode::Hash {
             self.state.add_byte(cu, 47);
         }
-        self.state.permute();
+        self.state.permute(XOODOO_ROUNDS);
         if let Some(mut out) = out {
             self.state.extract_bytes(&mut out);
         }
