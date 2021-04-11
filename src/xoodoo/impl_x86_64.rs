@@ -3,11 +3,7 @@ use super::{Xoodoo, ROUND_KEYS};
 use core::arch::x86_64::*;
 
 impl Xoodoo {
-    #[allow(
-        non_upper_case_globals,
-        clippy::many_single_char_names,
-        clippy::cast_ptr_alignment
-    )]
+    #[allow(clippy::many_single_char_names)]
     pub fn permute(&mut self) {
         let st = &mut self.st;
         unsafe {

@@ -1,6 +1,15 @@
 use zeroize::Zeroize;
 
-use crate::error::Error;
+#[derive(Debug)]
+pub struct TagMismatch;
+
+impl std::fmt::Display for TagMismatch {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "tag verification failed.")
+    }
+}
+
+impl std::error::Error for TagMismatch {}
 
 pub const AUTH_TAG_BYTES: usize = 16;
 
@@ -8,23 +17,16 @@ pub const AUTH_TAG_BYTES: usize = 16;
 pub struct Tag([u8; AUTH_TAG_BYTES]);
 
 impl Tag {
-    #[inline(always)]
-    pub(crate) fn inner_mut(&mut self) -> &mut [u8; AUTH_TAG_BYTES] {
-        &mut self.0
-    }
-
-    #[inline]
-    pub fn verify(&self, bin: [u8; AUTH_TAG_BYTES]) -> Result<(), Error> {
+    pub fn verify(&self, bin: [u8; AUTH_TAG_BYTES]) -> Result<(), TagMismatch> {
         if &Tag::from(bin) == self {
             Ok(())
         } else {
-            Err(Error::TagMismatch)
+            Err(TagMismatch)
         }
     }
 }
 
 impl Drop for Tag {
-    #[inline]
     fn drop(&mut self) {
         self.0.zeroize();
     }
@@ -42,21 +44,24 @@ impl PartialEq for Tag {
 }
 
 impl AsRef<[u8]> for Tag {
-    #[inline(always)]
     fn as_ref(&self) -> &[u8] {
         &self.0
     }
 }
 
+impl AsMut<[u8]> for Tag {
+    fn as_mut(&mut self) -> &mut [u8] {
+        &mut self.0
+    }
+}
+
 impl From<Tag> for [u8; AUTH_TAG_BYTES] {
-    #[inline(always)]
     fn from(tag: Tag) -> Self {
         tag.0
     }
 }
 
 impl From<[u8; AUTH_TAG_BYTES]> for Tag {
-    #[inline(always)]
     fn from(bin: [u8; AUTH_TAG_BYTES]) -> Self {
         Tag(bin)
     }

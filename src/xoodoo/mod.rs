@@ -17,28 +17,24 @@ pub struct Xoodoo {
 }
 
 impl Xoodoo {
-    #[inline(always)]
     fn bytes_view(&self) -> &[u8] {
         let view = RawBytes::bytes_view(&self.st);
         debug_assert_eq!(view.len(), 48);
         view
     }
 
-    #[inline(always)]
     fn bytes_view_mut(&mut self) -> &mut [u8] {
         let view = RawBytes::bytes_view_mut(&mut self.st);
         debug_assert_eq!(view.len(), 48);
         view
     }
 
-    #[inline(always)]
     fn endian_swap(&mut self) {
         for word in self.st.iter_mut() {
             *word = (*word).to_le()
         }
     }
 
-    #[inline]
     pub fn from_bytes(bytes: [u8; 48]) -> Self {
         let mut st = Xoodoo::default();
         let st_bytes = st.bytes_view_mut();
@@ -46,13 +42,11 @@ impl Xoodoo {
         st
     }
 
-    #[inline(always)]
     pub fn bytes(&self, out: &mut [u8; 48]) {
         let st_bytes = self.bytes_view();
         out.copy_from_slice(st_bytes);
     }
 
-    #[inline(always)]
     pub fn add_byte(&mut self, byte: u8, offset: usize) {
         self.endian_swap();
         let st_bytes = self.bytes_view_mut();
@@ -60,7 +54,6 @@ impl Xoodoo {
         self.endian_swap();
     }
 
-    #[inline(always)]
     pub fn add_bytes(&mut self, bytes: &[u8]) {
         self.endian_swap();
         let st_bytes = self.bytes_view_mut();
@@ -70,7 +63,6 @@ impl Xoodoo {
         self.endian_swap();
     }
 
-    #[inline(always)]
     pub fn extract_bytes(&mut self, out: &mut [u8]) {
         self.endian_swap();
         let st_bytes = self.bytes_view();
