@@ -2,50 +2,69 @@ use rawbytes::RawBytes;
 use zeroize::Zeroize;
 
 #[cfg(not(target_arch = "x86_64"))]
-mod impl_portable;
+mod impl_portable_x1;
 #[cfg(target_arch = "x86_64")]
-mod impl_x86_64;
+mod impl_x86_64_x1;
+#[cfg(target_arch = "x86_64")]
+mod impl_x86_64_x8;
 
 const ROUND_KEYS: [u32; 12] = [
     0x012, 0x1a0, 0x0f0, 0x380, 0x02c, 0x060, 0x014, 0x120, 0x0d0, 0x3c0, 0x038, 0x058,
 ];
 
-#[derive(Clone, Debug, Default)]
+/// Xoodoo permutation parameterized over the number of states and the number of rounds. Typical
+/// R values are 6 for xoofff and 12 for xoodyak, and typical values for N would be 1 for xoodyak
+/// and depending on if the cpu supports 128/256/512 vector instructions 4/8/16.
+#[derive(Clone, Debug)]
 #[repr(C)]
-pub struct Xoodoo {
-    st: [u32; 12],
+pub struct Xoodoo<const N: usize, const R: usize> {
+    st: [[u32; 12]; N],
 }
 
-impl Xoodoo {
-    fn bytes_view(&self) -> &[u8] {
-        let view = RawBytes::bytes_view(&self.st);
-        debug_assert_eq!(view.len(), 48);
-        view
+impl<const N: usize, const R: usize> Default for Xoodoo<N, R> {
+    fn default() -> Self {
+        Self { st: [[0; 12]; N] }
     }
+}
 
-    fn bytes_view_mut(&mut self) -> &mut [u8] {
-        let view = RawBytes::bytes_view_mut(&mut self.st);
+impl<const N: usize, const R: usize> Xoodoo<N, R> {
+    #[cfg(target_endian = "little")]
+    pub fn bytes_view(&self, i: usize) -> &[u8] {
+        let view = RawBytes::bytes_view(&self.st[i]);
         debug_assert_eq!(view.len(), 48);
         view
     }
 
     #[cfg(target_endian = "little")]
-    pub fn add_bytes(&mut self, bytes: &[u8], offset: usize) {
-        let st_bytes = self.bytes_view_mut();
+    fn bytes_view_mut(&mut self, i: usize) -> &mut [u8] {
+        let view = RawBytes::bytes_view_mut(&mut self.st[i]);
+        debug_assert_eq!(view.len(), 48);
+        view
+    }
+
+    pub fn zeroize(&mut self) {
+        for i in 0..N {
+            self.st[i].zeroize()
+        }
+    }
+
+    #[cfg(target_endian = "little")]
+    pub fn add_bytes(&mut self, i: usize, bytes: &[u8], offset: usize) {
+        let st_bytes = self.bytes_view_mut(i);
         for (st_byte, byte) in st_bytes.iter_mut().skip(offset).zip(bytes) {
             *st_byte ^= byte;
         }
     }
 
     #[cfg(target_endian = "little")]
-    pub fn extract_bytes(&mut self, out: &mut [u8]) {
-        let st_bytes = self.bytes_view();
+    pub fn extract_bytes(&mut self, i: usize, out: &mut [u8]) {
+        let st_bytes = self.bytes_view(i);
         out.copy_from_slice(&st_bytes[..out.len()]);
     }
 }
 
-impl Drop for Xoodoo {
+impl<const N: usize, const R: usize> Drop for Xoodoo<N, R> {
     fn drop(&mut self) {
-        self.st.zeroize()
+        self.zeroize()
     }
 }

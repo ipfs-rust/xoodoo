@@ -2,16 +2,16 @@ use super::{Xoodoo, ROUND_KEYS};
 
 use core::arch::x86_64::*;
 
-impl Xoodoo {
+impl<const R: usize> Xoodoo<1, R> {
     #[allow(clippy::many_single_char_names)]
-    pub fn permute(&mut self, n: usize) {
-        let st = &mut self.st;
+    pub fn permute(&mut self) {
+        let st = &mut self.st[0];
         unsafe {
             let rho_east_2 = _mm_set_epi32(0x0605_0407, 0x0201_0003, 0x0e0d_0c0f, 0x0a09_080b);
             let mut a = _mm_loadu_si128(st.as_ptr().add(0) as *const _);
             let mut b = _mm_loadu_si128(st.as_ptr().add(4) as *const _);
             let mut c = _mm_loadu_si128(st.as_ptr().add(8) as *const _);
-            for &round_key in ROUND_KEYS[..n].iter().rev() {
+            for &round_key in ROUND_KEYS[..R].iter().rev() {
                 let mut p = _mm_shuffle_epi32(_mm_xor_si128(_mm_xor_si128(a, b), c), 0x93);
                 let mut e = _mm_or_si128(_mm_slli_epi32(p, 5), _mm_srli_epi32(p, 32 - 5));
                 p = _mm_or_si128(_mm_slli_epi32(p, 14), _mm_srli_epi32(p, 32 - 14));

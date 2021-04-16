@@ -1,8 +1,8 @@
 use super::{Xoodoo, ROUND_KEYS};
 
-impl Xoodoo {
-    pub fn permute(&mut self, n: usize) {
-        for &round_key in ROUND_KEYS[..n].iter().rev() {
+impl<const R: usize> Xoodoo<1, R> {
+    pub fn permute(&mut self) {
+        for &round_key in ROUND_KEYS[..R].iter().rev() {
             let st = &mut self.st;
             let mut e = [0u32; 4];
             for i in 0..4 {

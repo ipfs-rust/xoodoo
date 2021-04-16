@@ -1,6 +1,5 @@
 use crate::xoodoo::Xoodoo;
 
-const XOODOO_ROUNDS: usize = 12;
 const HASH_RATE: usize = 16;
 const KEYED_ABSORB_RATE: usize = 44;
 const KEYED_SQUEEZE_RATE: usize = 24;
@@ -38,7 +37,7 @@ enum Phase {
 
 #[derive(Clone, Debug)]
 pub struct Xoodyak {
-    state: Xoodoo,
+    state: Xoodoo<1, 12>,
     mode: Mode,
     phase: Phase,
 }
@@ -73,11 +72,11 @@ impl Xoodyak {
         );
         self.phase = Phase::Up;
         if self.mode != Mode::Hash {
-            self.state.add_bytes(&[cu], 47);
+            self.state.add_bytes(0, &[cu], 47);
         }
-        self.state.permute(XOODOO_ROUNDS);
+        self.state.permute();
         if let Some(mut out) = out {
-            self.state.extract_bytes(&mut out);
+            self.state.extract_bytes(0, &mut out);
         }
     }
 
@@ -85,15 +84,15 @@ impl Xoodyak {
         debug_assert!(bin.unwrap_or_default().len() <= self.mode.absorb_rate());
         self.phase = Phase::Down;
         if let Some(bin) = bin {
-            self.state.add_bytes(&bin, 0);
-            self.state.add_bytes(&[0x01], bin.len());
+            self.state.add_bytes(0, &bin, 0);
+            self.state.add_bytes(0, &[0x01], bin.len());
         } else {
-            self.state.add_bytes(&[0x01], 0);
+            self.state.add_bytes(0, &[0x01], 0);
         }
         if self.mode == Mode::Hash {
-            self.state.add_bytes(&[cd & 0x01], 47);
+            self.state.add_bytes(0, &[cd & 0x01], 47);
         } else {
-            self.state.add_bytes(&[cd], 47);
+            self.state.add_bytes(0, &[cd], 47);
         }
     }
 
