@@ -1,10 +1,32 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use xoodyak::*;
+use xoodoo::*;
 
 fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("Xoodoo permutation", |b| {
+    c.bench_function("Xoodoo12 1 x1", |b| {
         let mut out = [0u8; 48];
         let mut st = Xoodoo::<1, 12>::default();
+        b.iter(|| {
+            st.permute();
+            st.extract_bytes(0, &mut out);
+            out
+        })
+    });
+
+    c.bench_function("Xoodoo6 8 x1", |b| {
+        let mut out = [0u8; 48];
+        let mut st = Xoodoo::<1, 6>::default();
+        b.iter(|| {
+            for _ in 0..8 {
+                st.permute();
+            }
+            st.extract_bytes(0, &mut out);
+            out
+        })
+    });
+
+    c.bench_function("Xoodoo6 8 x8", |b| {
+        let mut out = [0u8; 48];
+        let mut st = Xoodoo::<8, 6>::default();
         b.iter(|| {
             st.permute();
             st.extract_bytes(0, &mut out);

@@ -16,6 +16,7 @@ default = ["std"]
 std = []
 
 [dependencies]
+core_simd = { path = "../stdsimd/crates/core_simd" }
 rawbytes = "0.1"
 zeroize = "1.2"
 
